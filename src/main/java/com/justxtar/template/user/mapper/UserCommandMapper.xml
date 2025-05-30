@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.justxtar.template.user.mapper.UserCommandMapper">
+
+    <insert id="create" parameterType="com.justxtar.template.user.command.model.UserModel">
+        INSERT INTO user (name, email, created_at, updated_at)
+        VALUES (#{name}, #{email}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update" parameterType="com.justxtar.template.user.command.model.UserModel">
+        UPDATE user
+        SET name = #{name},
+            email = #{email},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="delete" parameterType="long">
+        UPDATE user
+        SET deleted_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="getById" parameterType="long" resultType="com.justxtar.template.user.command.model.UserModel">
+        SELECT id, name, email
+        FROM user
+        WHERE id = #{id} AND deleted_at IS NULL
+    </select>
+
+</mapper> 

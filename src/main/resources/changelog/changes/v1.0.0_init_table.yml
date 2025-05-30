@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: init_parking_space_table
+      author: szlin
+      changes:
+        - createTable:
+            tableName: parking_space
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  # 車位編號
+                  name: number
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  # 車位種類
+                  name: type
+                  type: VARCHAR(255)
+              - column:
+                  # 車格種類
+                  name: slot_type
+                  type: VARCHAR(255)
+              - column:
+                  # 車位座標
+                  name: position
+                  type: VARCHAR(255)
+              - column:
+                  # 樓層id
+                  name: floor_id
+                  type: BIGINT
+              - column:
+                  # 是否有充電樁
+                  name: has_charging_pile
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  # 車位大小
+                  name: size
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted_at
+                  type: DATETIME

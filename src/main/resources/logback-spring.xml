@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property resource="application.properties"/>
+    <springProperty scope="context" name="log_path" source="logging.file.path"/>
+    <springProperty scope="context" name="logging_level" source="app.logging-level" defaultValue="info"/>
+    <property name="LOGS" value="${log_path}"/>
+
+    <appender name="Console"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d %p %logger %C{1} [%t] %m%n
+            </Pattern>
+        </layout>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="ErrorLog"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"app":"visitor_system"}</customFields>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>  <!-- @timestamp 改名为 timestamp -->
+                <version>version</version>        <!-- @version 改名为 version -->
+            </fieldNames>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS}/visitor_system_error_%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+            <maxFileSize>3MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+        <immediateFlush>true</immediateFlush>
+        <prudent>false</prudent>
+        <append>true</append>
+    </appender>
+
+    <appender name="ProcessFile" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
+            <key>id</key>
+            <defaultValue>0</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="${id}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                    <customFields>{"app":"visitor_system","process_id":"${id}"}</customFields>
+                    <fieldNames>
+                        <timestamp>timestamp</timestamp>  <!-- @timestamp 改名为 timestamp -->
+                        <version>version</version>        <!-- @version 改名为 version -->
+                    </fieldNames>
+                </encoder>
+                <!-- 按照設定級別過濾 -->
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>${logging_level}</level>
+                </filter>
+                <!-- 排除 ERROR 級別 -->
+                <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                    <level>ERROR</level>
+                    <onMatch>DENY</onMatch>
+                    <onMismatch>ACCEPT</onMismatch>
+                </filter>
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${LOGS}/visitor_system_${id}_%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+                    <maxFileSize>3MB</maxFileSize>
+                    <maxHistory>30</maxHistory>
+                    <totalSizeCap>5GB</totalSizeCap>
+                </rollingPolicy>
+                <immediateFlush>true</immediateFlush>
+                <prudent>false</prudent>
+                <append>true</append>
+            </appender>
+        </sift>
+        <immediateFlush>true</immediateFlush>
+        <prudent>false</prudent>
+        <append>true</append>
+    </appender>
+
+    <root level="trace">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="ErrorLog"/>
+    </root>
+
+    <!-- 設定 Logger -->
+    <logger name="com.tsc.parkingSystem.infra.service" level="trace" additivity="false">
+        <appender-ref ref="ProcessFile"/>
+        <appender-ref ref="Console"/>
+        <appender-ref ref="ErrorLog"/>
+    </logger>
+</configuration>
